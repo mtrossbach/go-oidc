@@ -19,6 +19,8 @@ import (
 const (
 	issuerGoogleAccounts         = "https://accounts.google.com"
 	issuerGoogleAccountsNoScheme = "accounts.google.com"
+	issuerAzureADAccounts		 = "https://login.microsoftonline.com/"
+	issuerAzureADAccountsAlt	 = "https://sts.windows.net/"
 )
 
 // KeySet is a set of publc JSON Web Keys that can be used to validate the signature
@@ -238,7 +240,9 @@ func (v *IDTokenVerifier) Verify(ctx context.Context, rawIDToken string) (*IDTok
 		//
 		// We will not add hooks to let other providers go off spec like this.
 		if !(v.issuer == issuerGoogleAccounts && t.Issuer == issuerGoogleAccountsNoScheme) {
-			return nil, fmt.Errorf("oidc: id token issued by a different provider, expected %q got %q", v.issuer, t.Issuer)
+			if !(strings.HasPrefix(v.issuer, issuerAzureADAccounts) && strings.HasPrefix(t.Issuer, issuerAzureADAccountsAlt)) {
+				return nil, fmt.Errorf("oidc: id token issued by a different provider, expected %q got %q", v.issuer, t.Issuer)
+			}
 		}
 	}
 
